@@ -1,9 +1,9 @@
 // @see - https://www.electron.build/configuration/configuration
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "YourAppID",
+  "appId": "com.omnimind.wxcounter",
   "asar": true,
-  "productName": "YourAppName",
+  "productName": "WxCounter",
   "directories": {
     "output": "release/${version}"
   },
@@ -11,12 +11,29 @@
     "dist",
     "dist-electron"
   ],
+
+  // ========== macOS 配置 ==========
   "mac": {
     "target": [
       "dmg"
     ],
-    "artifactName": "${productName}-Mac-${version}-Installer.${ext}"
+    "artifactName": "${productName}-Mac-${version}-Installer.${ext}",
+    // 签名身份（不设置则自动选择钥匙串中的 Developer ID Application 证书）
+    // "identity": "Developer ID Application: Your Name (TEAM_ID)",
+
+    // Hardened Runtime（公证必须）
+    "hardenedRuntime": true,
+    // Entitlements 文件（Electron 需要 JIT 等权限）
+    "entitlements": "build/entitlements.mac.plist",
+    "entitlementsInherit": "build/entitlements.mac.plist",
+    // Gatekeeper 检查
+    "gatekeeperAssess": false
   },
+
+  // macOS 公证配置
+  "afterSign": "scripts/notarize.cjs",
+
+  // ========== Windows 配置 ==========
   "win": {
     "target": [
       {
@@ -26,14 +43,26 @@
         ]
       }
     ],
-    "artifactName": "${productName}-Windows-${version}-Setup.${ext}"
+    "artifactName": "${productName}-Windows-${version}-Setup.${ext}",
+    // 签名配置
+    // 方式一：使用 .pfx 证书文件（通过环境变量 CSC_LINK 和 CSC_KEY_PASSWORD 自动读取）
+    // 方式二：使用证书指纹（适用于硬件令牌）
+    // "certificateSha1": "",
+    // 签名摘要算法
+    "signingHashAlgorithms": [
+      "sha256"
+    ],
+    // 时间戳服务器
+    "rfc3161TimeStampServer": "http://timestamp.digicert.com"
   },
+
   "nsis": {
     "oneClick": false,
     "perMachine": false,
     "allowToChangeInstallationDirectory": true,
     "deleteAppDataOnUninstall": false
   },
+
   "linux": {
     "target": [
       "AppImage"
