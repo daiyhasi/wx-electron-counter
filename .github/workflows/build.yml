@@ -77,9 +77,6 @@ jobs:
       - name: 📦 打包 Electron 应用 (Windows)
         if: matrix.platform == 'win'
         run: npx electron-builder --win --config electron-builder.json5 --publish never
-        env:
-          # 跳过签名（CI 中暂不签名）
-          CSC_LINK: ''
 
       # 7. 上传构建产物
       - name: 📤 上传构建产物
