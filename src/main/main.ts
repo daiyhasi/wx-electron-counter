@@ -1,10 +1,30 @@
 import { app, BrowserWindow } from 'electron'
-
+import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+// ---------- 版本信息 ----------
+// 读取构建时生成的 version.json（由 scripts/update-version.cjs 生成）
+let versionHash = 'dev'
+try {
+  const versionPath = path.join(__dirname, '..', 'version.json')
+  if (fs.existsSync(versionPath)) {
+    const versionInfo = JSON.parse(fs.readFileSync(versionPath, 'utf-8'))
+    versionHash = versionInfo.hash || 'unknown'
+  }
+} catch {
+  // 开发模式下可能没有 version.json，忽略错误
+}
+
+// 设置「关于」面板信息（macOS 原生显示，Windows/Linux 可自定义）
+app.setAboutPanelOptions({
+  applicationName: 'WxCounter',
+  applicationVersion: `${app.getVersion()} (${versionHash})`,
+  copyright: '© 2026 OmniMind',
+})
 
 // 构建后的目录结构
 //

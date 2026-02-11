@@ -1,0 +1,118 @@
+# ============================================================
+# GitHub Actions — Electron 应用双端构建工作流
+# 在 macOS 和 Windows 上构建安装包
+# 触发方式：手动触发 (workflow_dispatch)
+# ============================================================
+
+name: Build Electron App
+
+on:
+  # 仅支持手动触发
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: '是否创建 GitHub Release（草稿）'
+        required: false
+        type: boolean
+        default: false
+
+# ---------- 并发控制：同一分支仅保留最新的构建 ----------
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+# ---------- 全局权限 ----------
+permissions:
+  contents: write  # 用于 Release 上传
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # ---------- macOS 构建 ----------
+          - os: macos-latest
+            platform: mac
+          # ---------- Windows 构建 ----------
+          - os: windows-latest
+            platform: win
+
+    runs-on: ${{ matrix.os }}
+    name: 构建 (${{ matrix.platform }})
+
+    steps:
+      # 1. 检出代码
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      # 2. 安装 Node.js
+      - name: 📦 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      # 3. 安装依赖
+      - name: 📦 安装依赖
+        run: npm ci
+
+      # 4. 生成版本信息（将 git commit hash 写入 version.json）
+      - name: 🏷️ 生成版本信息
+        run: node scripts/update-version.cjs
+
+      # 5. 构建前端 + Electron（vite-plugin-electron 自动处理主进程和预加载脚本）
+      - name: 🔨 构建应用
+        run: npx vite build
+
+      # 6. 打包 Electron 应用 (macOS)
+      - name: 📦 打包 Electron 应用 (macOS)
+        if: matrix.platform == 'mac'
+        run: npx electron-builder --mac --config electron-builder.json5
+        env:
+          # 跳过签名（CI 中暂不签名）
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      # 6. 打包 Electron 应用 (Windows)
+      - name: 📦 打包 Electron 应用 (Windows)
+        if: matrix.platform == 'win'
+        run: npx electron-builder --win --config electron-builder.json5
+        env:
+          # 跳过签名（CI 中暂不签名）
+          CSC_LINK: ''
+
+      # 7. 上传构建产物
+      - name: 📤 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: electron-app-${{ matrix.platform }}
+          path: |
+            release/**/*.dmg
+            release/**/*.exe
+            release/**/*.yml
+          if-no-files-found: error
+          retention-days: 30
+
+  # ---------- 创建 Release（手动触发时可选） ----------
+  release:
+    needs: build
+    if: ${{ inputs.create_release == true }}
+    runs-on: ubuntu-latest
+    name: 📋 创建 Release
+
+    steps:
+      - name: 📥 下载所有构建产物
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: 🚀 创建 GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          draft: true
+          generate_release_notes: true
+          files: |
+            artifacts/**/*.dmg
+            artifacts/**/*.exe
+            artifacts/**/*.yml
