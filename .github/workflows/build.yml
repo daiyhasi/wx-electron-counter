@@ -84,9 +84,10 @@ jobs:
         with:
           name: electron-app-${{ matrix.platform }}
           path: |
-            release/**/*.dmg
-            release/**/*.exe
-            release/**/*.yml
+            release/*.dmg
+            release/*.exe
+            release/*.yml
+            release/*.blockmap
           if-no-files-found: error
           retention-days: 30
 
