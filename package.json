@@ -2,6 +2,8 @@
   "name": "wx-electron-counter",
   "private": true,
   "version": "0.0.0",
+  "description": "基于 Electron + React + TypeScript 的桌面计数器应用",
+  "author": "OmniMind",
   "type": "module",
   "scripts": {
     "dev": "vite",

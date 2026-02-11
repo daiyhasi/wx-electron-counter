@@ -68,7 +68,7 @@ jobs:
       # 6. 打包 Electron 应用 (macOS)
       - name: 📦 打包 Electron 应用 (macOS)
         if: matrix.platform == 'mac'
-        run: npx electron-builder --mac --config electron-builder.json5
+        run: npx electron-builder --mac --config electron-builder.json5 --publish never
         env:
           # 跳过签名（CI 中暂不签名）
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
@@ -76,7 +76,7 @@ jobs:
       # 6. 打包 Electron 应用 (Windows)
       - name: 📦 打包 Electron 应用 (Windows)
         if: matrix.platform == 'win'
-        run: npx electron-builder --win --config electron-builder.json5
+        run: npx electron-builder --win --config electron-builder.json5 --publish never
         env:
           # 跳过签名（CI 中暂不签名）
           CSC_LINK: ''
