@@ -33,7 +33,32 @@ wx-electron-counter/
     ```bash
     npm run build
     ```
-    这将编译 TypeScript，构建渲染进程和主进程，并使用 `electron-builder` 打包应用程序。
+    这将生成版本信息、构建渲染进程和主进程，并使用 `electron-builder` 打包应用程序。
+
+## CI/CD 构建
+
+项目已配置 GitHub Actions 支持在云端自动构建 macOS (`.dmg`) 和 Windows (`.exe`) 安装包。
+
+### 触发构建
+
+1. 进入 GitHub 仓库 → **Actions** 标签页
+2. 选择左侧的 **Build Electron App**
+3. 点击 **Run workflow**，选择分支
+4. 可选勾选「是否创建 GitHub Release（草稿）」
+5. 点击绿色的 **Run workflow** 按钮
+
+### 获取构建产物
+
+- 构建完成后，在对应 workflow run 底部的 **Artifacts** 区域下载：
+  - `electron-app-mac` — macOS 安装包
+  - `electron-app-win` — Windows 安装包
+- 若勾选了创建 Release，会在仓库 **Releases** 中生成草稿
+
+### 关于代码签名
+
+> 当前 CI 中 **未启用签名**。未签名的应用在首次打开时会触发系统安全警告：
+> - **macOS**: 右键点击 → 打开，或终端执行 `sudo xattr -cr /path/to/App.app`
+> - **Windows**: 点击「更多信息」→「仍要运行」
 
 ## 架构亮点
 
